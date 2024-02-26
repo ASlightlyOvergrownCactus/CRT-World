@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "AMTHRNIbMJ+4rvU1rlK8GvCFK81ShBNRTB9yeRHCrAY2egX3Drk9WGEjUX5qHxocSa4yEUF9ezqaSgiCPo9Hkg==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Aleks\\OneDrive\\Desktop\\Rain World Modding\\TestMods\\CRTWorld\\CRT-World\\src\\CRTWorld.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Aleks\\.nuget\\packages\\polysharp\\1.8.3\\polysharp.1.8.3.nupkg.sha512"
+  ],
+  "logs": []
+}

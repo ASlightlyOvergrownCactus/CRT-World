@@ -1,0 +1,7 @@
+C:\Users\Aleks\OneDrive\Desktop\Rain World Modding\TestMods\MerShaderLoader\src\bin\Debug\MerShaderLoader.dll
+C:\Users\Aleks\OneDrive\Desktop\Rain World Modding\TestMods\MerShaderLoader\src\bin\Debug\MerShaderLoader.pdb
+C:\Users\Aleks\OneDrive\Desktop\Rain World Modding\TestMods\MerShaderLoader\src\obj\Debug\MerShaderLoader.csproj.AssemblyReference.cache
+C:\Users\Aleks\OneDrive\Desktop\Rain World Modding\TestMods\MerShaderLoader\src\obj\Debug\MerShaderLoader.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Aleks\OneDrive\Desktop\Rain World Modding\TestMods\MerShaderLoader\src\obj\Debug\MerShaderLoader.csproj.CoreCompileInputs.cache
+C:\Users\Aleks\OneDrive\Desktop\Rain World Modding\TestMods\MerShaderLoader\src\obj\Debug\MerShaderLoader.dll
+C:\Users\Aleks\OneDrive\Desktop\Rain World Modding\TestMods\MerShaderLoader\src\obj\Debug\MerShaderLoader.pdb
