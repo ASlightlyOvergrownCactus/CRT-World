@@ -23,7 +23,7 @@ public class CRTOptions : OptionInterface
     {
         intensity = config.Bind<float>("intensity", 25, new ConfigAcceptableRange<float>(0, 100));
         scanLineDarkness = config.Bind<float>("scanLines", 50, new ConfigAcceptableRange<float>(0, 100));
-        distortion = config.Bind<float>("distortion", 15, new ConfigAcceptableRange<float>(0, 100));
+        distortion = config.Bind<float>("distortion", 10, new ConfigAcceptableRange<float>(0, 100));
     }
 
     public override void Initialize()

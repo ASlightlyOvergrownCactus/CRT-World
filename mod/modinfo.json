@@ -4,7 +4,7 @@
 	"version": "1.0",
 	"hide_version": false,
 	"authors": "Cactus",
-	"description": "Adds a CRT overlay effect to your game!\nYou can set the intensity of it in the remix menu.\nGithub here: https://github.com/ASlightlyOvergrownCactus/CRT-World",
+	"description": "Adds a CRT overlay effect to your game!\nYou can set the intensity of it in the remix menu.\nGithub here: https://github.com/ASlightlyOvergrownCactus/CRT-World \n\nNote!!! This mod is incompatible with Sharpener!",
 	"requirements": [],
 	"requirements_names": [],
 	"checksum_override_version": false,

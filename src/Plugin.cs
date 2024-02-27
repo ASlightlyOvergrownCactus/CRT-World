@@ -26,21 +26,41 @@ sealed class Plugin : BaseUnityPlugin
     public static Shader CRTShader;
     public void OnEnable()
     {
-        On.RainWorld.OnModsInit += RainWorld_OnModsInit;
-        new Hook(typeof(Futile).GetMethod("get_mousePosition"), newMousePos);
+        try
+        {
+            On.RainWorld.OnModsInit += RainWorld_OnModsInit;
+            new Hook(typeof(Futile).GetMethod("get_mousePosition"), NewMousePos);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Exception from CRTWorld: " + e);
+            throw;
+        }
     }
 
-    private Vector2 newMousePos(Func<Vector2> orig)
+    private Vector3 NewMousePos(Func<Vector3> orig)
     {
-        Vector2 mousePos = orig();
+        Vector3 mousePos = orig();
+        // Implement fixed mouse position later, this is actually a really complicated issue apparently and for now doesnt affect gameplay much.
+        /*
+        if (Camera.main.gameObject.GetComponent<CrtScreen>() != null)
+        {
+            mousePos.x /= Camera.main.pixelWidth;
+            mousePos.y /= Camera.main.pixelHeight;
 
-        mousePos = new Vector2(mousePos.x / Camera.main.pixelWidth, Camera.main.pixelHeight);
-        float radius = Camera.main.gameObject.GetComponent<CrtScreen>().GetDistortion();
-        float warp = new Vector3((mousePos.x - 0.5f), (mousePos.y - 0.5f), radius).magnitude / new Vector2(0.5f, radius).magnitude;
-        warp += 0.05f;
-        Vector2 origDis = (new Vector2(mousePos.x - 0.5f, mousePos.y - 0.5f) * warp);
-        mousePos =  new Vector2(origDis.x + 0.5f, origDis.y + 0.5f);
-
+            Vector2 p = new Vector2(mousePos.x, mousePos.y);
+            float z = 1.0f / (CRTOptions.distortion.Value / 100f);
+            float m = 0.95f;
+            Vector2 numerator = (m) * (p - new Vector2(0.5f, 0.5f)) * Mathf.Sqrt(Mathf.Pow(z, 2f) + Mathf.Pow(0.5f, 2f));
+            float denominator =
+                Mathf.Sqrt(Mathf.Pow(m * (p.x - 0.5f), 2f) + Mathf.Pow(m * (p.y - 0.5f), 2f) + Mathf.Pow(z, 2f));
+            mousePos = numerator / denominator;
+            mousePos.x += 0.5f;
+            mousePos.y += 0.5f;
+            
+            mousePos.x *= Camera.main.pixelWidth;
+            mousePos.y *= Camera.main.pixelHeight;
+        }*/
         return mousePos;
     }
 
