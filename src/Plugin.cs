@@ -85,11 +85,13 @@ sealed class CrtScreen : MonoBehaviour
     [Range(0, 1)] public float verts_force = 0.51f;
     [Range(0, 1)] public float verts_force_2 = 0.255f;
     [Range(0, 1)] public float verts_force_3 = 0.8f;
+    [Range(0, 1)] public float screen_dist = 1.0f;
     void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
         mat.SetFloat("_VertsColor", 1-verts_force);
         mat.SetFloat("_VertsColor2", 1-verts_force_2);
         mat.SetFloat("_VertsColor3", 1-verts_force_3);
+        mat.SetFloat("_ScreenDist", screen_dist); // No distortion at 0.0, screen edge dist at 1.0
         Graphics.Blit(src, dest, mat);
     }
 
@@ -100,6 +102,12 @@ sealed class CrtScreen : MonoBehaviour
             verts_force_3 = CRTOptions.distortionF / 100f;
             verts_force_2 = CRTOptions.intensityF / 100f;
             verts_force = CRTOptions.scanLineDarknessF / 100f;
+            if (CRTOptions.screenDistF)
+                screen_dist = 1.0f;
+            else
+            {
+                screen_dist = 0.0f;
+            }
         }
         else
         {
@@ -110,6 +118,12 @@ sealed class CrtScreen : MonoBehaviour
                 verts_force_3 = CRTOptions.distortion.Value / 100f;
                 verts_force_2 = CRTOptions.intensity.Value / 100f;
                 verts_force = CRTOptions.scanLineDarkness.Value / 100f;
+                if (CRTOptions.screenDist.Value)
+                    screen_dist = 1.0f;
+                else
+                {
+                    screen_dist = 0.0f;
+                }
             }
         }
     }

@@ -6,6 +6,7 @@ Shader"Futile/CRTScreen"
         _VertsColor("Verts fill color", Float) = 0
         _VertsColor2("Verts fill color 2", Float) = 0
         _VertsColor3("Verts fill color 3", Float) = 0
+        _ScreenDist("Bool Screen Distortion", FLoat) = 1
     }
     SubShader
     {
@@ -44,6 +45,7 @@ sampler2D _GrabTexture : register(s0);
 uniform float _VertsColor;
 uniform float _VertsColor2;
 uniform float _VertsColor3;
+uniform float _ScreenDist;
 
 struct v2f
 {
@@ -67,14 +69,27 @@ v2f vert(appdata_full v)
 
 half4 frag(v2f i) : SV_Target
 {
-    float2 uv = i.uv;
+    /*float2 uv = i.uv;
     float radius = _VertsColor3;
-    float warp = length(float3(uv - 0.5, radius)) / length(float2(0.5, radius));
-    warp += 0.05;
-    uv = (uv - 0.5) * warp + 0.5;
+    float m = 0.95;
+    float2 numerator = float2(uv.x - 0.5, uv.y - 0.5);
+    float denominator = m * sqrt(pow(radius, 2.0) + pow(0.5, 2.0) - pow(uv.x - 0.5, 2.0) - pow(uv.y - 0.5, 2.0));
+    uv = radius * (numerator / denominator);
+    uv = uv + float2(0.5, 0.5);*/
+    
+    float2 uv = i.uv;
+    if (_ScreenDist == 1.0)
+    {
+        float radius = _VertsColor3;
+        float warp = length(float3(uv - 0.5, radius)) / length(float2(0.5, radius));
+        warp += 0.05;
+        uv = (uv - 0.5) * warp + 0.5;
+    }
+
+    
     
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
-        return float4(0, 0, 0, 0);
+        return float4(0, 0, 0, 1);
    
     float4 color = tex2D(_MainTex, uv);
     
