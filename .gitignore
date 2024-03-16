@@ -1,1 +1,15 @@
 /src/lib/*
+/src/obj/Debug/net48
+/src/obj/Debug
+/src/Properties
+/src/bin/Debug/net48
+/src/obj
+src/obj/project.nuget.cache
+src/obj/project.assets.json
+src/obj/CRTWorld.csproj.nuget.g.props
+src/obj/CRTWorld.csproj.nuget.dgspec.json
+/src/Properties
+/src/obj
+/src/.vs/ProjectEvaluation
+/src/.vs/CRTWorld/v17
+/src/.vs/CRTWorld/DesignTimeBuild

@@ -1,35 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BepInEx;
-using System.Security.Permissions;
-using UnityEngine;
-using RWCustom;
-using System.Security;
-using System.Reflection;
-using MonoMod.RuntimeDetour;
-using UnityEngine.Assertions;
-using UnityEngine.PlayerLoop;
-
-
-[module: UnverifiableCode]
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+﻿using System.Linq;
 
 namespace MerShaderLoader;
 
-[BepInPlugin("cactus.crt", "CRT", "1.1")]
+[BepInPlugin(GUID: MOD_ID, Name: MOD_NAME, Version: VERSION)]
 sealed class Plugin : BaseUnityPlugin
 {
+    public const string MOD_ID = "cactus.crt";
+    public const string MOD_NAME = "CRT";
+    public const string VERSION = "1.1";
+    public const string AUTHORS = "SlightlyOverGrownCactus";
+
     static bool loaded = false;
     public static Shader CRTShader;
     public static Shader GameShader;
     public static Texture2D[] BayerTextures = new Texture2D[4];
-    public static List<Texture2D> palettes = new List<Texture2D>();
-    public static readonly int palNum = 31;
+    public static List<Texture2D> palettes = new();
+    public static Dictionary<string, Texture2D> CustomPalettes = new();
 
     public static MaterialPropertyBlock bayerBlock;
+
     public void OnEnable()
     {
         try
@@ -39,8 +28,9 @@ sealed class Plugin : BaseUnityPlugin
         }
         catch (Exception e)
         {
-            Console.WriteLine("Exception from CRTWorld: " + e);
-            throw;
+            Debug.LogException(e);
+            Debug.LogError(e);
+            throw new Exception("Exception from CRTWorld: " + e);
         }
     }
 
@@ -73,11 +63,14 @@ sealed class Plugin : BaseUnityPlugin
     private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
     {
         orig(self);
-        MachineConnector.SetRegisteredOI("cactus.crt", CRTOptions.Instance);
-        if (!loaded)
+        try
         {
+            if (loaded) return;
             loaded = true;
-            var bundle = AssetBundle.LoadFromFile(AssetManager.ResolveFilePath("assets/crtscreen", false)); // Loads the asset bundle from your mod's file path
+
+            MachineConnector.SetRegisteredOI("cactus.crt", CRTOptions.Instance);
+            //Set on flase because this is from the previous build of the game, still waiting for Update
+            var bundle = AssetBundle.LoadFromFile(AssetManager.ResolveFilePath("assets/crtscreen"/*, false*/)); // Loads the asset bundle from your mod's file path
 
             bayerBlock = new();
 
@@ -86,66 +79,184 @@ sealed class Plugin : BaseUnityPlugin
             BayerTextures[1] = bundle.LoadAsset<Texture2D>("Assets/shaders 1.9.03/bayer4tile8.png");
             BayerTextures[2] = bundle.LoadAsset<Texture2D>("Assets/shaders 1.9.03/bayer8tile4.png");
             BayerTextures[3] = bundle.LoadAsset<Texture2D>("Assets/shaders 1.9.03/bayer16tile2.png");
-            
-            // Palettes - 4 color
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/demichrome4.png")); // 0 - order of list from here for remix menu
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/hollow4.png")); // 1
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/RetroGB4.png")); // 2
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/jojo4.png")); // 3
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/amber4.png")); // 4
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/blood4.png")); // 5
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/horror4.png")); // 6
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/lava4.png")); // 7
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/miku4.png")); // 8
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/aqua4.png")); // 9
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/wish4.png")); // 10
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/moonlight4.png")); // 11
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/4color/royal4.png")); // 12
-            
-            // Palettes - 8 color
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/ammo8.png")); // 13
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/bi8.png")); // 14
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/borkfest8.png")); // 15
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/citrink8.png")); // 16
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/dream8.png")); // 17
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/fox8.png")); // 18
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/gothic8.png")); // 19
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/lava8.png")); // 20
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/morning8.png")); // 21
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/nebula8.png")); // 22
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/ocean8.png")); // 23
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/paper8.png")); // 24
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/parchment8.png")); // 25
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/purple8.png")); // 26
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/RetroGB8.png")); // 27
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/rustgold8.png")); // 28
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/submerchimera8.png")); // 29
-            palettes.Add(bundle.LoadAsset<Texture2D>("Assets/palettes/8color/winter8.png")); // 30
-            
+
+            //This loads all the palletes from the bundle and the folder
+            LoadPalettes(bundle);
+
             // Shaders
             GameShader = bundle.LoadAsset<Shader>("Assets/shaders 1.9.03/GameGirlScreen.shader"); // Loads the shader itself from the asset bundle
             CRTShader = bundle.LoadAsset<Shader>("Assets/shaders 1.9.03/CRTScreen.shader"); // Loads the shader itself from the asset bundle
             Camera.main.gameObject.AddComponent<CrtScreen>();
+
+            //Add all the palettes to the RemixMenu
+            foreach (var paletteName in CrtScreen.GetPaletteNames())
+            {
+                CRTOptions.palettes.Add(new ListItem(paletteName));
+            }
         }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex);
+            Debug.LogException(ex);
+            throw new Exception("Error trying to load OnModsInit CRT 1.1");
+        }
+        
+    }
+
+    public static void LoadPalettes(AssetBundle bundle)
+    {
+        // Take all the image filenames inside the Bundle file
+        string[] assetNames = bundle.GetAllAssetNames();
+
+        // Loop over the first part of the process
+        foreach (var assetName in assetNames)
+        {
+            //Check for the bayer pngs
+            if(!(assetName == "assets/shaders 1.9.03/bayer16tile2.png" || assetName == "assets/shaders 1.9.03/bayer2tile16.png" || assetName == "assets/shaders 1.9.03/bayer4tile8.png" || assetName == "assets/shaders 1.9.03/bayer8tile4.png"))
+            {
+                continue;
+            }
+            
+            if (IsImageFile(assetName))
+            {
+                Debug.LogError(assetName);
+                // Load the Texture2D from the bundle
+                var paletteTexture = bundle.LoadAsset<Texture2D>(assetName);
+                // Check if the texture is loaded successfully
+                if (paletteTexture != null)
+                {
+                    // Extract the texture name
+                    var textureName = Path.GetFileNameWithoutExtension(assetName);
+                    // Set the name of the texture
+                    paletteTexture.name = textureName;
+                    // Add the texture to the palettes list
+                    palettes.Add(paletteTexture);
+                }
+            }
+        }
+
+        // Get a list of files from the directory "ctr_palettes" and its subdirectories
+        var files = ListDirectory("ctr_palettes", includeAll: true).Distinct().ToList();
+
+        // Loop over the second part of the process
+        foreach (var file in files)
+        {
+            // Check if the file has a .png extension
+            if (".png".Equals(Path.GetExtension(file)))
+            {
+                // Read the image bytes from the file
+                var imageBytes = File.ReadAllBytes(file);
+                // Create a new Texture2D and load the image bytes into it
+                var texture = new Texture2D(2, 2);
+                if (texture.LoadImage(imageBytes))
+                {
+                    // Extract the texture name
+                    var textureName = Path.GetFileNameWithoutExtension(file);
+                    // Set the name of the texture
+                    texture.name = textureName;
+                    // Add the texture to the palettes list
+                    palettes.Add(texture);
+                }
+            }
+        }
+    }
+
+    public static string[] ListDirectory(string path, bool directories = false, bool includeAll = false)
+    {
+        // Initialize two lists to store directory paths and file paths
+        List<string> list = new(); // Stores the resulting paths
+        List<string> list2 = new(); // Stores directories that have been processed
+
+        // If the provided path is an absolute path
+        if (Path.IsPathRooted(path))
+        {
+            // Return an array of directories or files in the specified path
+            return directories ? Directory.GetDirectories(path) : Directory.GetFiles(path);
+        }
+
+        // If palettes are not set to be loaded and there are no installed mods
+        if (!(CRTOptions.loadPalettes?.Value ?? false))
+        {
+            // Add the merged mods directory and the root folder directory to the list of directories to be searched
+            list2.Add(Path.Combine(Custom.RootFolderDirectory(), "mergedmods"));
+            for (int i = 0; i < ModManager.InstalledMods.Count; i++)
+            {
+                list2.Add(ModManager.InstalledMods[i].path);
+            }
+        }
+
+        // Add the root folder directory to the list of directories to be searched
+        list2.Add(Custom.RootFolderDirectory());
+
+        // Iterate over each directory in the list of directories to be searched
+        foreach (string item in list2)
+        {
+            // Combine the item directory path with the provided path
+            string path2 = Path.Combine(item, path.ToLowerInvariant());
+            // If the combined path does not exist, skip to the next iteration
+            if (!Directory.Exists(path2))
+            {
+                continue;
+            }
+
+            // Get an array of directories or files in the combined path
+            string[] array = directories ? Directory.GetDirectories(path2) : Directory.GetFiles(path2);
+            // Iterate over each directory or file in the array
+            for (int j = 0; j < array.Length; j++)
+            {
+                // Convert the path to lowercase for uniformity
+                string text = array[j].ToLowerInvariant();
+                // Extract the filename from the path
+                string fileName = Path.GetFileName(text);
+                // If the filename is not already in the list of processed directories or includeAll flag is set
+                if (!list2.Contains(fileName) || includeAll)
+                {
+                    // Add the path to the result list
+                    list.Add(text);
+                    // If includeAll flag is not set
+                    if (!includeAll)
+                    {
+                        // Add the filename to the list of processed directories
+                        list2.Add(fileName);
+                    }
+                }
+            }
+        }
+
+        // Convert the list of paths to an array and return it
+        return list.ToArray();
+    }
+
+    //Silly check for imgs inside Bundle
+    private static bool IsImageFile(string fileName)
+    {
+        string extension = Path.GetExtension(fileName).ToLower();
+        return extension == ".png" || extension == ".jpg" || extension == ".jpeg";
     }
 }
 
-sealed class CrtScreen : MonoBehaviour
+public class CrtScreen : MonoBehaviour
 {
     private static bool menuLoaded = false;
-    
-    public Material gameMat = new Material(Plugin.GameShader);
+
+    public Material gameMat;
     [Range(-1, 1)] public float brightness = 0.3f;
     [Range(0, 1)] public float offset = 0.25f;
     [Range(0, 1)] public float contrast = 0.8f;
     private bool usePal = false;
-    
-    
-    public Material crtMat = new Material(Plugin.CRTShader);
+
+    public Material crtMat;
     [Range(0, 1)] public float verts_force = 0.51f;
     [Range(0, 1)] public float verts_force_2 = 0.255f;
     [Range(0, 1)] public float verts_force_3 = 0.8f;
     [Range(0, 1)] public float screen_dist = 1.0f;
+
+    private void Awake()
+    {
+        gameMat = new Material(Plugin.GameShader);
+        crtMat = new Material(Plugin.CRTShader);
+    }
+
     void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
         if (usePal)
@@ -225,141 +336,49 @@ sealed class CrtScreen : MonoBehaviour
         }
     }
 
+    //This switch case was change to var case
     public Texture2D GetDither(string dither)
     {
-        Texture2D ditherTex;
-
-        switch (dither)
+        Texture2D ditherTex = dither switch
         {
-            case "Bayer2":
-                ditherTex = Plugin.BayerTextures[0];
-                break;
-            case "Bayer4":
-                ditherTex = Plugin.BayerTextures[1];
-                break;
-            case "Bayer8":
-                ditherTex = Plugin.BayerTextures[2];
-                break;
-            default:
-                ditherTex = Plugin.BayerTextures[3];
-                break;
-        }
+            "Bayer2" => Plugin.BayerTextures[0],
+            "Bayer4" => Plugin.BayerTextures[1],
+            "Bayer8" => Plugin.BayerTextures[2],
+            _ => Plugin.BayerTextures[3],
+        };
         return ditherTex;
     }
 
+    //All the palette list, this was a switch case previously 
     public Texture2D GetPalette(string palette)
     {
-        Texture2D paletteTex;
+        Dictionary<string, Texture2D> paletteMap = new();
 
-        if (Plugin.palettes.Count == Plugin.palNum)
+        for (int i = 0; i < Plugin.palettes.Count; i++)
         {
-            switch (palette)
-            {
-                case "Chrome4":
-                    paletteTex = Plugin.palettes[0];
-                    break;
-                case "Hollow4":
-                    paletteTex = Plugin.palettes[1];
-                    break;
-                case "RetroGB4":
-                    paletteTex = Plugin.palettes[2];
-                    break;
-                case "Jojo4":
-                    paletteTex = Plugin.palettes[3];
-                    break;
-                case "Amber4":
-                    paletteTex = Plugin.palettes[4];
-                    break;
-                case "Blood4":
-                    paletteTex = Plugin.palettes[5];
-                    break;
-                case "Horror4":
-                    paletteTex = Plugin.palettes[6];
-                    break;
-                case "Lava4":
-                    paletteTex = Plugin.palettes[7];
-                    break;
-                case "Miku4":
-                    paletteTex = Plugin.palettes[8];
-                    break;
-                case "Aqua4":
-                    paletteTex = Plugin.palettes[9];
-                    break;
-                case "Wish4":
-                    paletteTex = Plugin.palettes[10];
-                    break;
-                case "Moonlight4":
-                    paletteTex = Plugin.palettes[11];
-                    break;
-                case "Royal4":
-                    paletteTex = Plugin.palettes[12];
-                    break;
-                case "Ammo8":
-                    paletteTex = Plugin.palettes[13];
-                    break;
-                case "Bi8":
-                    paletteTex = Plugin.palettes[14];
-                    break;
-                case "Borkfest8":
-                    paletteTex = Plugin.palettes[15];
-                    break;
-                case "Citrink8":
-                    paletteTex = Plugin.palettes[16];
-                    break;
-                case "Dream8":
-                    paletteTex = Plugin.palettes[17];
-                    break;
-                case "Fox8":
-                    paletteTex = Plugin.palettes[18];
-                    break;
-                case "Gothic8":
-                    paletteTex = Plugin.palettes[19];
-                    break;
-                case "Lava8":
-                    paletteTex = Plugin.palettes[20];
-                    break;
-                case "Morning8":
-                    paletteTex = Plugin.palettes[21];
-                    break;
-                case "Nebula8":
-                    paletteTex = Plugin.palettes[22];
-                    break;
-                case "Ocean8":
-                    paletteTex = Plugin.palettes[23];
-                    break;
-                case "Paper8":
-                    paletteTex = Plugin.palettes[24];
-                    break;
-                case "Parchment8":
-                    paletteTex = Plugin.palettes[25];
-                    break;
-                case "Purple8":
-                    paletteTex = Plugin.palettes[26];
-                    break;
-                case "RetroGB8":
-                    paletteTex = Plugin.palettes[27];
-                    break;
-                case "RustGold8":
-                    paletteTex = Plugin.palettes[28];
-                    break;
-                case "Chimera8":
-                    paletteTex = Plugin.palettes[29];
-                    break;
-                case "Winter8":
-                    paletteTex = Plugin.palettes[30];
-                    break;
-                default:
-                    paletteTex = Plugin.palettes[0];
-                    break;
-            }
-
-            return paletteTex;
+            paletteMap.Add(Plugin.palettes[i].name.ToLower(), Plugin.palettes[i]);
         }
 
-
-        return Plugin.palettes[0];
-
+        if (paletteMap.ContainsKey(palette.ToLower()))
+        {
+            return paletteMap[palette.ToLower()];
+        }
+        else
+        {
+            return Plugin.palettes[0];
+        }
     }
 
+    //RemixMenu helper Method so the name of custom palettes is not null or empty
+    public static List<string> GetPaletteNames()
+    {
+        List<string> paletteNames = new();
 
+        foreach (var palette in Plugin.palettes)
+        {
+            paletteNames.Add(palette.name);
+        }
+
+        return paletteNames;
+    }
 }
