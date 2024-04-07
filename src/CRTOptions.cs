@@ -1,11 +1,4 @@
-﻿using System.Collections.Generic;
-using BepInEx.Logging;
-using JetBrains.Annotations;
-using Menu.Remix.MixedUI;
-using Menu.Remix.MixedUI.ValueTypes;
-using UnityEngine;
-
-namespace MerShaderLoader;
+﻿namespace MerShaderLoader;
 
 public class CRTOptions : OptionInterface
 {
@@ -18,7 +11,10 @@ public class CRTOptions : OptionInterface
     public static float distortionF;
     public static Configurable<bool> screenDist;
     public static bool screenDistF;
-    
+    //This option is useless all the palettes are loading
+    public static Configurable<bool> loadPalettes;
+    public static bool loadPalettesF;
+
     public static Configurable<float> brightness;
     public static float brightnessF;
     public static Configurable<float> offset;
@@ -33,42 +29,47 @@ public class CRTOptions : OptionInterface
     public static bool usePalF;
 
     // Most palettes here were gotten from https://lospec.com/palette-list / They have a lot of great palettes! Go check em out!
-    public static List<ListItem> palettes = new List<ListItem>()
-    {
-        // 4-color palettes
-        new ("Chrome4"),
-        new ("Hollow4"),
-        new ("RetroGB4"),
-        new ("Jojo4"),
-        new ("Amber4"),
-        new ("Blood4"),
-        new ("Horror4"),
-        new ("Lava4"),
-        new ("Miku4"),
-        new ("Aqua4"),
-        new ("Wish4"),
-        new ("Moonlight4"),
-        new ("Royal4"),
-        // 8-color palettes
-        new ("Ammo8"),
-        new ("Bi8"),
-        new ("Borkfest8"),
-        new ("Citrink8"),
-        new ("Dream8"),
-        new ("Fox8"),
-        new ("Gothic8"),
-        new ("Lava8"),
-        new ("Morning8"),
-        new ("Nebula8"),
-        new ("Ocean8"),
-        new ("Paper8"),
-        new ("Parchment8"),
-        new ("Purple8"),
-        new ("RetroGB8"),
-        new ("RustGold8"),
-        new ("Chimera8"),
-        new ("Winter8")
-    };
+    //public static List<ListItem> palettes = new List<ListItem>()
+    //{
+    //    // 4-color palettes
+    //    new ("Chrome4"),
+    //    new ("Hollow4"),
+    //    new ("RetroGB4"),
+    //    new ("Jojo4"),
+    //    new ("Amber4"),
+    //    new ("Blood4"),
+    //    new ("Horror4"),
+    //    new ("Lava4"),
+    //    new ("Miku4"),
+    //    new ("Aqua4"),
+    //    new ("Wish4"),
+    //    new ("Moonlight4"),
+    //    new ("Royal4"),
+    //    // 8-color palettes
+    //    new ("Ammo8"),
+    //    new ("Bi8"),
+    //    new ("Borkfest8"),
+    //    new ("Citrink8"),
+    //    new ("Dream8"),
+    //    new ("Fox8"),
+    //    new ("Gothic8"),
+    //    new ("Lava8"),
+    //    new ("Morning8"),
+    //    new ("Nebula8"),
+    //    new ("Ocean8"),
+    //    new ("Paper8"),
+    //    new ("Parchment8"),
+    //    new ("Purple8"),
+    //    new ("RetroGB8"),
+    //    new ("RustGold8"),
+    //    new ("Chimera8"),
+    //    new ("Winter8")
+    //};
+
+    //Takes all the palettes with data and name from a loop
+    public static List<ListItem> palettes = new();
+
+
 
     [CanBeNull]
     public static UIelement[] uIelements;
@@ -79,6 +80,7 @@ public class CRTOptions : OptionInterface
         scanLineDarkness = config.Bind<float>("CRTWorld_scanLines", 50, new ConfigAcceptableRange<float>(0, 100));
         distortion = config.Bind<float>("CRTWorld_distortion", 10, new ConfigAcceptableRange<float>(0, 100));
         screenDist = config.Bind<bool>("CRTWorld_screenDist", true);
+        loadPalettes = config.Bind<bool>("ForceLoadCustomPalettes", false);
         brightness = config.Bind<float>("CRTWorld_brightness", 50, new ConfigAcceptableRange<float>(0, 100));
         offset = config.Bind<float>("CRTWorld_offset", 25, new ConfigAcceptableRange<float>(0, 100));
         contrast = config.Bind<float>("CRTWorld_contrast", 80, new ConfigAcceptableRange<float>(0, 100));
@@ -89,7 +91,7 @@ public class CRTOptions : OptionInterface
 
     public override void Initialize()
     {
-        OpTab opTab = new OpTab(this, "Options");
+        OpTab opTab = new(this, "Options");
         Tabs = new[]
         {
             opTab
@@ -117,7 +119,7 @@ public class CRTOptions : OptionInterface
             // Make the options on the left side
             new OpCheckBox(screenDist, new Vector2(leftSidePos, 520)) {description=Translate("Controls the full screen edge distortion")},
             new OpLabel(leftSidePos+30, 523, Translate("CRT Screen Edge")),
-            
+
             new OpFloatSlider(brightness, new Vector2(leftSidePos, 440), sliderBarLength) {description=Translate("Brightness of gameboy lines.")},
             new OpLabel(leftSidePos, 415, Translate("\nBrightness of gameboy grid. \nValues lower than 50 are darker, \nhigher than 50 are brighter.")),
             
@@ -126,17 +128,21 @@ public class CRTOptions : OptionInterface
             new OpLabel(rightSidePos, 210, Translate("Preset Palettes to use.")),
             
             new OpCheckBox(usePal, new Vector2(rightSidePos, 280)) {description=Translate("Toggles the Posterization shader.")},
-            new OpLabel(rightSidePos+30, 260, Translate("Toggle Posterization.")),
+            new OpLabel(rightSidePos+30, 283, Translate("Toggle Posterization.")),
             
             // put dither list here at y 340 label y 360 left
-            new OpListBox(dither, new Vector2(leftSidePos, 250), 100, new List<ListItem>{new ListItem("Bayer16"),new ListItem("Bayer8"),new ListItem("Bayer4"),new ListItem("Bayer2")}),
+            new OpListBox(dither, new Vector2(leftSidePos, 250), 100, new List<ListItem>{new("Bayer16"),new("Bayer8"),new("Bayer4"),new("Bayer2")}),
             new OpLabel(leftSidePos, 370, Translate("Type of Bayer dither.")),
             
             new OpFloatSlider(offset, new Vector2(leftSidePos, 200), sliderBarLength) {description=Translate("Offset of palette.")},
             new OpLabel(leftSidePos, 175, Translate("Offsets the palette.\nValues lower than 50 offset darker,\nhigher than 50 offset lighter")),
             
             new OpFloatSlider(contrast, new Vector2(leftSidePos, 120), sliderBarLength) {description=Translate("Contrast of palette shader.")},
-            new OpLabel(leftSidePos, 100, Translate("Contrast of the palette."))
+            new OpLabel(leftSidePos, 100, Translate("Contrast of the palette.")),
+
+            //This option was added to the menu
+            new OpCheckBox(loadPalettes, new Vector2(leftSidePos, 480)) {description=Translate("Load Inactive Mods with custom palettes")},
+            new OpLabel(leftSidePos+30, 483, Translate("Load all the palettes"))
         };
         opTab.AddItems(uIelements);
         
@@ -156,6 +162,9 @@ public class CRTOptions : OptionInterface
             ditherF = ((OpListBox)uIelements[15])._GetDisplayValue();
             offsetF = ((OpFloatSlider)uIelements[17]).GetValueFloat();
             contrastF = ((OpFloatSlider)uIelements[19]).GetValueFloat();
+
+            //This option was added to the menu
+            loadPalettesF = ((OpCheckBox)uIelements[21]).GetValueBool();
         }
     }
 }
