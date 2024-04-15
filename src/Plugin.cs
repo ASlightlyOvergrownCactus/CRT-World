@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MerShaderLoader;
 
@@ -7,7 +8,7 @@ sealed class Plugin : BaseUnityPlugin
 {
     public const string MOD_ID = "cactus.crt";
     public const string MOD_NAME = "CRT";
-    public const string VERSION = "1.1";
+    public const string VERSION = "1.2";
     public const string AUTHORS = "SlightlyOverGrownCactus";
 
     static bool loaded = false;
@@ -80,7 +81,7 @@ sealed class Plugin : BaseUnityPlugin
             BayerTextures[2] = bundle.LoadAsset<Texture2D>("Assets/shaders 1.9.03/bayer8tile4.png");
             BayerTextures[3] = bundle.LoadAsset<Texture2D>("Assets/shaders 1.9.03/bayer16tile2.png");
 
-            //This loads all the palletes from the bundle and the folder
+            //This loads all the palettes from the bundle and the folder
             LoadPalettes(bundle);
 
             // Shaders
@@ -91,7 +92,8 @@ sealed class Plugin : BaseUnityPlugin
             //Add all the palettes to the RemixMenu
             foreach (var paletteName in CrtScreen.GetPaletteNames())
             {
-                CRTOptions.palettes.Add(new ListItem(paletteName));
+                if (paletteName != "bayer16tile2" && paletteName != "bayer8tile4" && paletteName != "bayer4tile8" && paletteName != "bayer2tile16")
+                    CRTOptions.palettes.Add(new ListItem(paletteName));
             }
         }
         catch (Exception ex)
@@ -112,14 +114,14 @@ sealed class Plugin : BaseUnityPlugin
         foreach (var assetName in assetNames)
         {
             //Check for the bayer pngs
-            if(!(assetName == "assets/shaders 1.9.03/bayer16tile2.png" || assetName == "assets/shaders 1.9.03/bayer2tile16.png" || assetName == "assets/shaders 1.9.03/bayer4tile8.png" || assetName == "assets/shaders 1.9.03/bayer8tile4.png"))
+            if(assetName == "Assets/shaders 1.9.03/bayer16tile2.png" || assetName == "Assets/shaders 1.9.03/bayer2tile16.png" || assetName == "Assets/shaders 1.9.03/bayer4tile8.png" || assetName == "Assets/shaders 1.9.03/bayer8tile4.png")
             {
                 continue;
             }
             
             if (IsImageFile(assetName))
             {
-                Debug.LogError(assetName);
+                //Debug.LogError(assetName);
                 // Load the Texture2D from the bundle
                 var paletteTexture = bundle.LoadAsset<Texture2D>(assetName);
                 // Check if the texture is loaded successfully
@@ -135,8 +137,8 @@ sealed class Plugin : BaseUnityPlugin
             }
         }
 
-        // Get a list of files from the directory "ctr_palettes" and its subdirectories
-        var files = ListDirectory("ctr_palettes", includeAll: true).Distinct().ToList();
+        // Get a list of files from the directory "crt_palettes" and its subdirectories
+        var files = ListDirectory("crt_palettes", includeAll: true).Distinct().ToList();
 
         // Loop over the second part of the process
         foreach (var file in files)
@@ -152,6 +154,7 @@ sealed class Plugin : BaseUnityPlugin
                 {
                     // Extract the texture name
                     var textureName = Path.GetFileNameWithoutExtension(file);
+                    Debug.LogWarning(textureName + " loaded from outside source!");
                     // Set the name of the texture
                     texture.name = textureName;
                     // Add the texture to the palettes list
@@ -175,13 +178,14 @@ sealed class Plugin : BaseUnityPlugin
         }
 
         // If palettes are not set to be loaded and there are no installed mods
-        if (!(CRTOptions.loadPalettes?.Value ?? false))
+        if (ModManager.ActiveMods.Any())
         {
             // Add the merged mods directory and the root folder directory to the list of directories to be searched
             list2.Add(Path.Combine(Custom.RootFolderDirectory(), "mergedmods"));
-            for (int i = 0; i < ModManager.InstalledMods.Count; i++)
+            for (int i = 0; i < ModManager.ActiveMods.Count; i++)
             {
-                list2.Add(ModManager.InstalledMods[i].path);
+                if(ModManager.ActiveMods[i].enabled)
+                    list2.Add(ModManager.ActiveMods[i].path);
             }
         }
 
@@ -250,6 +254,11 @@ public class CrtScreen : MonoBehaviour
     [Range(0, 1)] public float verts_force_2 = 0.255f;
     [Range(0, 1)] public float verts_force_3 = 0.8f;
     [Range(0, 1)] public float screen_dist = 1.0f;
+    [Range(0, 1)] public float smear = 0.5f;
+    [Range(0, 1)] public float wiggle = 0.5f;
+    [Range(0, 30)] public int blur_samples = 15;
+    [Range(0, 1)] public float vcr_blur = 1.0f;
+    
 
     private void Awake()
     {
@@ -273,6 +282,10 @@ public class CrtScreen : MonoBehaviour
             crtMat.SetFloat("_VertsColor2", 1 - verts_force_2);
             crtMat.SetFloat("_VertsColor3", 1 - verts_force_3);
             crtMat.SetFloat("_ScreenDist", screen_dist); // No distortion at 0.0, screen edge dist at 1.0
+            crtMat.SetFloat("_Smear", smear);
+            crtMat.SetFloat("_Wiggle", wiggle);
+            crtMat.SetInt("_BlurSamples", blur_samples);
+            crtMat.SetFloat("_VCRBlur", vcr_blur);
             Graphics.Blit(gameTemp, dest, crtMat);
 
             RenderTexture.ReleaseTemporary(gameTemp);
@@ -283,6 +296,10 @@ public class CrtScreen : MonoBehaviour
             crtMat.SetFloat("_VertsColor2", 1 - verts_force_2);
             crtMat.SetFloat("_VertsColor3", 1 - verts_force_3);
             crtMat.SetFloat("_ScreenDist", screen_dist); // No distortion at 0.0, screen edge dist at 1.0
+            crtMat.SetFloat("_Smear", smear);
+            crtMat.SetFloat("_Wiggle", wiggle);
+            crtMat.SetInt("_BlurSamples", blur_samples);
+            crtMat.SetFloat("_VCRBlur", vcr_blur);
             Graphics.Blit(src, dest, crtMat);
         }
     }
@@ -301,6 +318,9 @@ public class CrtScreen : MonoBehaviour
             contrast = CRTOptions.contrastF / 100f;
             offset = CRTOptions.offsetF / 100f;
             usePal = CRTOptions.usePalF;
+            smear = CRTOptions.smearF / 100f;
+            wiggle = CRTOptions.wiggleF / 100f;
+            blur_samples = CRTOptions.blurSamplesF;
             
             if (CRTOptions.screenDistF)
                 screen_dist = 1.0f;
@@ -308,10 +328,17 @@ public class CrtScreen : MonoBehaviour
             {
                 screen_dist = 0.0f;
             }
+            
+            if (CRTOptions.vcrBlurF)
+                vcr_blur = 1.0f;
+            else
+            {
+                vcr_blur = 0.0f;
+            }
         }
         else
         {
-            if (CRTOptions.intensityF != 0f || CRTOptions.distortionF != 0f || CRTOptions.scanLineDarknessF != 0f || CRTOptions.brightnessF != 0f || CRTOptions.offsetF != 0f || CRTOptions.contrastF != 0f)
+            if (CRTOptions.intensityF != 0f || CRTOptions.distortionF != 0f || CRTOptions.scanLineDarknessF != 0f || CRTOptions.brightnessF != 0f || CRTOptions.offsetF != 0f || CRTOptions.contrastF != 0f || CRTOptions.smearF != 0f || CRTOptions.wiggleF != 0f || CRTOptions.blurSamplesF != 0f)
                 menuLoaded = true;
             else
             {
@@ -325,12 +352,21 @@ public class CrtScreen : MonoBehaviour
                 contrast = CRTOptions.contrast.Value / 100f;
                 offset = CRTOptions.offset.Value / 100f;
                 usePal = CRTOptions.usePal.Value;
+                smear = CRTOptions.smear.Value / 100f;
+                wiggle = CRTOptions.wiggle.Value / 100f;
+                blur_samples = CRTOptions.blurSamples.Value;
                 
                 if (CRTOptions.screenDist.Value)
                     screen_dist = 1.0f;
                 else
                 {
                     screen_dist = 0.0f;
+                }
+                if (CRTOptions.vcrBlur.Value)
+                    vcr_blur = 1.0f;
+                else
+                {
+                    vcr_blur = 0.0f;
                 }
             }
         }

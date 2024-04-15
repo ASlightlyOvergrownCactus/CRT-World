@@ -13,26 +13,32 @@
         "packagesPath": "C:\\Users\\Aleks\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\Aleks\\OneDrive\\Desktop\\Rain World Modding\\TestMods\\CRTWorld\\CRT-World\\src\\obj\\",
         "projectStyle": "PackageReference",
-        "skipContentFileWrite": true,
         "configFilePaths": [
           "C:\\Users\\Aleks\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net472"
+          "net48"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net472": {
+          "net48": {
+            "targetAlias": "net48",
             "projectReferences": {}
           }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
         }
       },
       "frameworks": {
-        "net472": {
+        "net48": {
+          "targetAlias": "net48",
           "dependencies": {
             "PolySharp": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
@@ -40,21 +46,8 @@
               "target": "Package",
               "version": "[1.8.3, )"
             }
-          }
-        }
-      },
-      "runtimes": {
-        "win": {
-          "#import": []
-        },
-        "win-arm64": {
-          "#import": []
-        },
-        "win-x64": {
-          "#import": []
-        },
-        "win-x86": {
-          "#import": []
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.201\\RuntimeIdentifierGraph.json"
         }
       }
     }

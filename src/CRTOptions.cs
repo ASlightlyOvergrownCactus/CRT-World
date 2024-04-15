@@ -28,44 +28,16 @@ public class CRTOptions : OptionInterface
     public static Configurable<bool> usePal;
     public static bool usePalF;
 
+    public static Configurable<bool> vcrBlur;
+    public static bool vcrBlurF;
+    public static Configurable<float> smear;
+    public static float smearF;
+    public static Configurable<float> wiggle;
+    public static float wiggleF;
+    public static Configurable<int> blurSamples;
+    public static int blurSamplesF;
+    
     // Most palettes here were gotten from https://lospec.com/palette-list / They have a lot of great palettes! Go check em out!
-    //public static List<ListItem> palettes = new List<ListItem>()
-    //{
-    //    // 4-color palettes
-    //    new ("Chrome4"),
-    //    new ("Hollow4"),
-    //    new ("RetroGB4"),
-    //    new ("Jojo4"),
-    //    new ("Amber4"),
-    //    new ("Blood4"),
-    //    new ("Horror4"),
-    //    new ("Lava4"),
-    //    new ("Miku4"),
-    //    new ("Aqua4"),
-    //    new ("Wish4"),
-    //    new ("Moonlight4"),
-    //    new ("Royal4"),
-    //    // 8-color palettes
-    //    new ("Ammo8"),
-    //    new ("Bi8"),
-    //    new ("Borkfest8"),
-    //    new ("Citrink8"),
-    //    new ("Dream8"),
-    //    new ("Fox8"),
-    //    new ("Gothic8"),
-    //    new ("Lava8"),
-    //    new ("Morning8"),
-    //    new ("Nebula8"),
-    //    new ("Ocean8"),
-    //    new ("Paper8"),
-    //    new ("Parchment8"),
-    //    new ("Purple8"),
-    //    new ("RetroGB8"),
-    //    new ("RustGold8"),
-    //    new ("Chimera8"),
-    //    new ("Winter8")
-    //};
-
     //Takes all the palettes with data and name from a loop
     public static List<ListItem> palettes = new();
 
@@ -80,13 +52,17 @@ public class CRTOptions : OptionInterface
         scanLineDarkness = config.Bind<float>("CRTWorld_scanLines", 50, new ConfigAcceptableRange<float>(0, 100));
         distortion = config.Bind<float>("CRTWorld_distortion", 10, new ConfigAcceptableRange<float>(0, 100));
         screenDist = config.Bind<bool>("CRTWorld_screenDist", true);
-        loadPalettes = config.Bind<bool>("ForceLoadCustomPalettes", false);
         brightness = config.Bind<float>("CRTWorld_brightness", 50, new ConfigAcceptableRange<float>(0, 100));
-        offset = config.Bind<float>("CRTWorld_offset", 25, new ConfigAcceptableRange<float>(0, 100));
-        contrast = config.Bind<float>("CRTWorld_contrast", 80, new ConfigAcceptableRange<float>(0, 100));
-        dither = config.Bind<string>("CRTWorld_dither", "Bayer16");
-        palette = config.Bind<string>("CRTWorld_palette", "Chrome4");
+        offset = config.Bind<float>("CRTWorld_offset", 20, new ConfigAcceptableRange<float>(0, 100));
+        contrast = config.Bind<float>("CRTWorld_contrast", 100, new ConfigAcceptableRange<float>(0, 100));
+        dither = config.Bind<string>("CRTWorld_dither", "Bayer2");
+        palette = config.Bind<string>("CRTWorld_palette", "Ammo8");
         usePal = config.Bind<bool>("CRTWorld_usepal", true);
+
+        vcrBlur = config.Bind<bool>("CRTWorld_vcrBlur", true);
+        smear = config.Bind<float>("CRTWorld_smear", 50, new ConfigAcceptableRange<float>(0, 100));
+        wiggle = config.Bind<float>("CRTWorld_wiggle", 5, new ConfigAcceptableRange<float>(0, 100));
+        blurSamples = config.Bind<int>("CRTWorld_blurSamples", 15, new ConfigAcceptableRange<int>(0, 30));
     }
 
     public override void Initialize()
@@ -124,8 +100,8 @@ public class CRTOptions : OptionInterface
             new OpLabel(leftSidePos, 415, Translate("\nBrightness of gameboy grid. \nValues lower than 50 are darker, \nhigher than 50 are brighter.")),
             
             // put palette list here at y 260 label y 290 right
-            new OpComboBox(palette, new Vector2(rightSidePos, 180), 100, palettes),
-            new OpLabel(rightSidePos, 210, Translate("Preset Palettes to use.")),
+            new OpComboBox(palette, new Vector2(rightSidePos, 20), 100, palettes),
+            new OpLabel(rightSidePos, 0, Translate("Preset and Downloaded Palettes to use.")),
             
             new OpCheckBox(usePal, new Vector2(rightSidePos, 280)) {description=Translate("Toggles the Posterization shader.")},
             new OpLabel(rightSidePos+30, 283, Translate("Toggle Posterization.")),
@@ -134,15 +110,23 @@ public class CRTOptions : OptionInterface
             new OpListBox(dither, new Vector2(leftSidePos, 250), 100, new List<ListItem>{new("Bayer16"),new("Bayer8"),new("Bayer4"),new("Bayer2")}),
             new OpLabel(leftSidePos, 370, Translate("Type of Bayer dither.")),
             
-            new OpFloatSlider(offset, new Vector2(leftSidePos, 200), sliderBarLength) {description=Translate("Offset of palette.")},
-            new OpLabel(leftSidePos, 175, Translate("Offsets the palette.\nValues lower than 50 offset darker,\nhigher than 50 offset lighter")),
+            new OpFloatSlider(offset, new Vector2(rightSidePos, 200), sliderBarLength) {description=Translate("Offset of palette.")},
+            new OpLabel(rightSidePos, 245, Translate("Offsets the palette.\nValues lower than 50 offset darker,\nhigher than 50 offset lighter")),
             
-            new OpFloatSlider(contrast, new Vector2(leftSidePos, 120), sliderBarLength) {description=Translate("Contrast of palette shader.")},
-            new OpLabel(leftSidePos, 100, Translate("Contrast of the palette.")),
-
-            //This option was added to the menu
-            new OpCheckBox(loadPalettes, new Vector2(leftSidePos, 480)) {description=Translate("Load Inactive Mods with custom palettes")},
-            new OpLabel(leftSidePos+30, 483, Translate("Load all the palettes"))
+            new OpFloatSlider(contrast, new Vector2(rightSidePos, 150), sliderBarLength) {description=Translate("Contrast of palette shader.")},
+            new OpLabel(rightSidePos, 170, Translate("Contrast of the palette.")),
+            
+            new OpCheckBox(vcrBlur, new Vector2(leftSidePos, 200)) {description=Translate("Applies the VCR Shader effect")},
+            new OpLabel(leftSidePos+30, 203, Translate("VCR Effect")),
+            
+            new OpFloatSlider(smear, new Vector2(leftSidePos, 140), sliderBarLength) {description=Translate("Color Smear of VCR.")},
+            new OpLabel(leftSidePos, 120, Translate("Smears color for VCR Shader")),
+            
+            new OpFloatSlider(wiggle, new Vector2(leftSidePos, 80), sliderBarLength) {description=Translate("Wiggle intensity of VCR.")},
+            new OpLabel(leftSidePos, 60, Translate("Makes VCR screen wiggle with intensity.")),
+            
+            new OpSliderTick(blurSamples, new Vector2(leftSidePos, 20), sliderBarLength) {description=Translate("Amount of blur samplings.")},
+            new OpLabel(leftSidePos, 0, Translate("Amount of samples for blur.")),
         };
         opTab.AddItems(uIelements);
         
@@ -162,9 +146,10 @@ public class CRTOptions : OptionInterface
             ditherF = ((OpListBox)uIelements[15])._GetDisplayValue();
             offsetF = ((OpFloatSlider)uIelements[17]).GetValueFloat();
             contrastF = ((OpFloatSlider)uIelements[19]).GetValueFloat();
-
-            //This option was added to the menu
-            loadPalettesF = ((OpCheckBox)uIelements[21]).GetValueBool();
+            vcrBlurF = ((OpCheckBox)uIelements[21]).GetValueBool();
+            smearF = ((OpFloatSlider)uIelements[23]).GetValueFloat();
+            wiggleF = ((OpFloatSlider)uIelements[25]).GetValueFloat();
+            blurSamplesF = (int)((OpSliderTick)uIelements[27]).GetValueFloat();
         }
     }
 }

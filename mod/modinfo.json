@@ -1,10 +1,10 @@
 {
 	"id": "cactus.crt",
 	"name": "CRT World",
-	"version": "1.1",
+	"version": "1.2",
 	"hide_version": false,
 	"authors": "Cactus",
-	"description": "Adds a CRT overlay effect to your game!\nYou can set the intensity of it in the remix menu.\nGithub here: https://github.com/ASlightlyOvergrownCactus/CRT-World \n\nAlso adds a custom palette posturization shader!\nPalette and shader are customized in remix.\n\nNote!!! This mod is incompatible with Sharpener!",
+	"description": "Adds a CRT & VCR overlay effect to your game!\nYou can change the settings of it in the remix menu.\nGithub here: https://github.com/ASlightlyOvergrownCactus/CRT-World \n\nAlso adds a custom palette posturization shader!\nPalette and shader are customized in remix.\nFor custom palette creation, check this guide: https://docs.google.com/document/d/1am2BCxo6lFmZx-iN2DjfYhh21Tz3HasLMkiOkdXf5Ao/edit?usp=sharing \n\nNote!!! This mod is incompatible with Sharpener!",
 	"requirements": [],
 	"requirements_names": [],
 	"checksum_override_version": false,
